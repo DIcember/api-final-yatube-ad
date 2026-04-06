@@ -13,7 +13,8 @@ router.register(
 )
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('', include('djoser.urls')),  # Добавьте это для JWT
-    path('auth/', include('djoser.urls.authtoken')),  # Альтернативный вариант
+    path('admin/', admin.site.urls),
+    path('api/v1/', include('api.urls')),
+    path('api/v1/auth/', include('djoser.urls.jwt')),  # JWT эндпоинты
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
