@@ -14,5 +14,6 @@ router.register(
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('jwt/', include('djoser.urls.jwt')),  # Эндпоинты JWT
+    path('', include('djoser.urls')),  # Добавьте это для JWT
+    path('auth/', include('djoser.urls.authtoken')),  # Альтернативный вариант
 ]
