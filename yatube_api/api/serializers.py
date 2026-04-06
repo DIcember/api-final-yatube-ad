@@ -2,7 +2,9 @@ from rest_framework import serializers
 from posts.models import Post, Comment, Group, Follow
 from django.contrib.auth import get_user_model
 
+
 User = get_user_model()
+
 
 class PostSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
@@ -14,6 +16,7 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = '__all__'
         read_only_fields = ('author', 'pub_date')
+
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
@@ -27,10 +30,12 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('author', 'post')
 
+
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = '__all__'
+
 
 class FollowSerializer(serializers.ModelSerializer):
     user = serializers.SlugRelatedField(
@@ -46,7 +51,7 @@ class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow
         fields = '__all__'
-        validators = []  # ← важно для кастомной валидации
+        validators = []
 
     def validate(self, data):
         request = self.context.get('request')
