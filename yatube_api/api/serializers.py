@@ -1,40 +1,49 @@
 from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
+from posts.models import Post, Group, Comment, Follow
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
-from posts.models import Comment, Post
+class PostSerializer(serializers.ModelSerializer):
+    author = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Post
+        fields = ('id', 'text', 'pub_date', 'author', 'group')
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ('id', 'title', 'slug', 'description')
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'author', 'post', 'text', 'created')
+        read_only_fields = ('post',)
+
 
 class FollowSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
     following = serializers.StringRelatedField()
-    
+
     class Meta:
         model = Follow
         fields = ('user', 'following')
-    
+
     def validate_following(self, value):
         request = self.context.get('request')
         if request.user == value:
-            raise serializers.ValidationError('Нельзя подписаться на самого себя')
+            raise serializers.ValidationError(
+                'Нельзя подписаться на самого себя'
+            )
         return value
-    
+
     def create(self, validated_data):
         validated_data['user'] = self.context.get('request').user
         return super().create(validated_data)
-        
-class PostSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(slug_field='username', read_only=True)
-
-    class Meta:
-        fields = '__all__'
-        model = Post
-
-
-class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
-
-    class Meta:
-        fields = '__all__'
-        model = Comment
