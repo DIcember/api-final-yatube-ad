@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions, filters
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import LimitOffsetPagination
 from django.shortcuts import get_object_or_404
 
 from posts.models import Post, Comment, Group, Follow
@@ -10,10 +10,6 @@ from .serializers import (
 from .permissions import IsAuthorOrReadOnly
 
 
-class CustomPagination(PageNumberPagination):
-    page_size = 10
-
-
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
@@ -21,7 +17,8 @@ class PostViewSet(viewsets.ModelViewSet):
         permissions.IsAuthenticatedOrReadOnly,
         IsAuthorOrReadOnly
     ]
-    pagination_class = CustomPagination
+    # ← Важно: используем LimitOffsetPagination для limit/offset
+    pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -33,6 +30,8 @@ class CommentViewSet(viewsets.ModelViewSet):
         permissions.IsAuthenticatedOrReadOnly,
         IsAuthorOrReadOnly
     ]
+    # ← Комментарии возвращаются как простой список (без пагинации!)
+    pagination_class = None
 
     def get_queryset(self):
         post_id = self.kwargs.get('post_id')
@@ -54,6 +53,8 @@ class FollowViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['following__username']
+    # ← Подписки возвращаются как простой список!
+    pagination_class = None
 
     def get_queryset(self):
         return Follow.objects.filter(user=self.request.user)
