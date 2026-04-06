@@ -36,6 +36,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+    pagination_class = None
     # ← Важно: для групп НЕТ пагинации по ТЗ, но должен возвращаться список!
 
 class FollowViewSet(viewsets.ModelViewSet):
