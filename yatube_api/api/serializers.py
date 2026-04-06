@@ -21,11 +21,11 @@ class GroupSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField(read_only=True)
+    post = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Comment
-        fields = ('id', 'author', 'text', 'created')
-        read_only_fields = ('post',)
+        fields = ('id', 'author', 'post', 'text', 'created')
 
 
 class FollowSerializer(serializers.ModelSerializer):
@@ -44,5 +44,11 @@ class FollowSerializer(serializers.ModelSerializer):
         if request.user == value:
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя'
+            )
+        if Follow.objects.filter(
+            user=request.user, following=value
+        ).exists():
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого пользователя'
             )
         return value
