@@ -10,6 +10,19 @@ from .serializers import (
 from .permissions import IsAuthorOrReadOnly
 
 
+class PostsPagination(LimitOffsetPagination):
+    """
+    Пагинация для постов:
+    - Без параметров limit/offset → возвращает простой список
+    - С параметрами → возвращает пагинированный ответ
+    """
+    def paginate_queryset(self, queryset, request, view=None):
+        # Если нет параметров пагинации — отключаем её
+        if request.query_params.get('limit') is None:
+            return None
+        return super().paginate_queryset(queryset, request, view)
+
+
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
@@ -17,8 +30,7 @@ class PostViewSet(viewsets.ModelViewSet):
         permissions.IsAuthenticatedOrReadOnly,
         IsAuthorOrReadOnly
     ]
-    # ← Важно: используем LimitOffsetPagination для limit/offset
-    pagination_class = LimitOffsetPagination
+    pagination_class = PostsPagination  # ← Используем умную пагинацию
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -30,8 +42,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         permissions.IsAuthenticatedOrReadOnly,
         IsAuthorOrReadOnly
     ]
-    # ← Комментарии возвращаются как простой список (без пагинации!)
-    pagination_class = None
+    pagination_class = None  # ← Комментарии: всегда список
 
     def get_queryset(self):
         post_id = self.kwargs.get('post_id')
@@ -45,7 +56,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    pagination_class = None
+    pagination_class = None  # ← Группы: всегда список
 
 
 class FollowViewSet(viewsets.ModelViewSet):
@@ -53,8 +64,7 @@ class FollowViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['following__username']
-    # ← Подписки возвращаются как простой список!
-    pagination_class = None
+    pagination_class = None  # ← Подписки: всегда список
 
     def get_queryset(self):
         return Follow.objects.filter(user=self.request.user)
