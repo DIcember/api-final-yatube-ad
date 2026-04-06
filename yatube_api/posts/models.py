@@ -12,7 +12,7 @@ class Post(models.Model):
         on_delete=models.CASCADE,
         related_name='posts'
     )
-    group = models.ForeignKey(
+    group = models.ForeignKey(  # ЭТО ПОЛЕ ОБЯЗАТЕЛЬНО ДОЛЖНО БЫТЬ!
         'Group',
         on_delete=models.SET_NULL,
         blank=True,
@@ -62,3 +62,8 @@ class Follow(models.Model):
 
     class Meta:
         unique_together = ('user', 'following')
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+
+    def __str__(self):
+        return f'{self.user} подписан на {self.following}'
