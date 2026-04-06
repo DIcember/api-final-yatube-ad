@@ -1,64 +1,48 @@
-from rest_framework import viewsets, filters, mixins
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.response import Response
+from rest_framework import serializers
 from posts.models import Post, Group, Comment, Follow
-from .serializers import (
-    PostSerializer, GroupSerializer, CommentSerializer, FollowSerializer
-)
-from .permissions import IsAuthorOrReadOnly
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
-class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-    permission_classes = (IsAuthorOrReadOnly,)
-    pagination_class = LimitOffsetPagination
+class PostSerializer(serializers.ModelSerializer):
+    author = serializers.StringRelatedField(read_only=True)
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+    class Meta:
+        model = Post
+        fields = ('id', 'text', 'pub_date', 'author', 'group')
 
 
-class GroupViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Group.objects.all()
-    serializer_class = GroupSerializer
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ('id', 'title', 'slug', 'description')
 
 
-class CommentViewSet(viewsets.ModelViewSet):
-    serializer_class = CommentSerializer
-    permission_classes = (IsAuthorOrReadOnly,)
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.StringRelatedField(read_only=True)
 
-    def get_queryset(self):
-        post_id = self.kwargs.get('post_id')
-        return Comment.objects.filter(post_id=post_id)
-
-    def perform_create(self, serializer):
-        post_id = self.kwargs.get('post_id')
-        post = Post.objects.get(id=post_id)
-        serializer.save(author=self.request.user, post=post)
+    class Meta:
+        model = Comment
+        fields = ('id', 'author', 'post', 'text', 'created')
+        read_only_fields = ('post',)
 
 
-class FollowViewSet(mixins.CreateModelMixin,
-                    mixins.ListModelMixin,
-                    viewsets.GenericViewSet):
-    serializer_class = FollowSerializer
-    permission_classes = (IsAuthenticated,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('following__username',)
+class FollowSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+    following = serializers.SlugRelatedField(
+        slug_field='username',
+        queryset=User.objects.all()
+    )
 
-    def get_queryset(self):
-        return Follow.objects.filter(user=self.request.user)
+    class Meta:
+        model = Follow
+        fields = ('user', 'following')
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=201,
-            headers=headers
-        )
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def validate_following(self, value):
+        request = self.context.get('request')
+        if request.user == value:
+            raise serializers.ValidationError(
+                'Нельзя подписаться на самого себя'
+            )
+        return value
