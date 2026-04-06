@@ -104,32 +104,13 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-DJOSER = {
-    'SERIALIZERS': {
-        'user_create': 'djoser.serializers.UserCreateSerializer',
-        'user': 'djoser.serializers.UserSerializer',
-        'current_user': 'djoser.serializers.UserSerializer',
-    },
-    'PERMISSIONS': {
-        'user': ['rest_framework.permissions.AllowAny'],
-        'user_list': ['rest_framework.permissions.AllowAny'],
-    },
-    'LOGIN_FIELD': 'username',
-}
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': 'django-insecure-your-secret-key-here',
-    'VERIFYING_KEY': None,
     'AUTH_HEADER_TYPES': ('Bearer',),
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
+}
+
+DJOSER = {
+    'LOGIN_FIELD': 'username',
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
