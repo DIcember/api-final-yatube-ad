@@ -24,7 +24,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'author', 'post', 'text', 'created')
+        fields = ('id', 'author', 'text', 'created')
         read_only_fields = ('post',)
 
 
@@ -39,16 +39,10 @@ class FollowSerializer(serializers.ModelSerializer):
         model = Follow
         fields = ('user', 'following')
 
-    def validate(self, data):
+    def validate_following(self, value):
         request = self.context.get('request')
-        if request.user == data['following']:
+        if request.user == value:
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя'
             )
-        if Follow.objects.filter(
-            user=request.user, following=data['following']
-        ).exists():
-            raise serializers.ValidationError(
-                'Вы уже подписаны на этого пользователя'
-            )
-        return data
+        return value
